@@ -39,46 +39,47 @@ interface PostProps {
     previousPost: {
       uid: string;
       data: {
-        title: string
-      }
+        title: string;
+      };
     }[];
     nextPost: {
       uid: string;
       data: {
-        title: string
-      }
-    }[]
+        title: string;
+      };
+    }[];
   };
-  preview: boolean
+  preview: boolean;
 }
 
 export default function Post({ post, navigation, preview }: PostProps) {
-  const totalWord = post.data.content.reduce((total, contentItem) => {
-    total += contentItem.heading.split(' ').length
+  const totalWord = post?.data.content.reduce((total, contentItem) => {
+    total += contentItem.heading.split(' ').length;
 
-    const words = contentItem.body.map(item => item.text.split(' ').length)
-    words.map(word => (total += word))
+    const words = contentItem.body.map(item => item.text.split(' ').length);
+    words.map(word => (total += word));
 
-    return total
-  }, 0)
+    return total;
+  }, 0);
 
   const readTime = Math.ceil(totalWord / 200);
 
-  const router = useRouter()
+  const router = useRouter();
 
   if (router.isFallback) {
-    return <h1>Carregando...</h1>
+    return <h1>Carregando...</h1>;
   }
 
   const formattedDate = format(
     new Date(post.first_publication_date),
     'dd MMM yyyy',
     {
-      locale: ptBR
+      locale: ptBR,
     }
-  )
+  );
 
-  const isPostEdited = post.first_publication_date !== post.last_publication_date
+  const isPostEdited =
+    post.first_publication_date !== post.last_publication_date;
 
   let editionDate;
 
@@ -87,16 +88,14 @@ export default function Post({ post, navigation, preview }: PostProps) {
       new Date(post.last_publication_date),
       "'* editado em' dd MMM yyyy', às' H':'m",
       {
-        locale: ptBR
+        locale: ptBR,
       }
-    )
+    );
   }
 
   return (
     <>
-      <Head>
-        {`${post.data.title} | SpaceTravelling`}
-      </Head>
+      <Head>{`${post.data.title} | SpaceTravelling`}</Head>
       <Header />
       <img src={post.data.banner.url} alt="imagem" className={styles.banner} />
       <main className={commonStyles.container}>
@@ -127,32 +126,33 @@ export default function Post({ post, navigation, preview }: PostProps) {
                 <h2>{content.heading}</h2>
                 <div
                   className={styles.postContent}
-                  dangerouslySetInnerHTML={{ __html: RichText.asHtml(content.body) }}
+                  dangerouslySetInnerHTML={{
+                    __html: RichText.asHtml(content.body),
+                  }}
                 />
               </article>
-            )
+            );
           })}
         </div>
 
         <section className={`${styles.navigation} ${commonStyles.container}`}>
-          {navigation?.previousPost.length > 0 &&
+          {navigation?.previousPost.length > 0 && (
             <div>
               <h3>{navigation.previousPost[0].data.title}</h3>
               <Link href={`/post/${navigation.previousPost[0].uid}`}>
                 <a>Post anterior</a>
               </Link>
             </div>
-          }
+          )}
 
-          {navigation?.nextPost.length > 0 &&
+          {navigation?.nextPost.length > 0 && (
             <div>
               <h3>{navigation.nextPost[0].data.title}</h3>
               <Link href={`/post/${navigation.nextPost[0].uid}`}>
                 <a>Próximo post</a>
               </Link>
             </div>
-          }
-
+          )}
         </section>
 
         <Comments />
@@ -166,33 +166,33 @@ export default function Post({ post, navigation, preview }: PostProps) {
         )}
       </main>
     </>
-  )
+  );
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const prismic = getPrismicClient();
   const posts = await prismic.query([
-    Prismic.Predicates.at('document.type', 'posts')
+    Prismic.Predicates.at('document.type', 'posts'),
   ]);
 
   const paths = posts.results.map(post => {
     return {
       params: {
-        slug: post.uid
-      }
-    }
-  })
+        slug: post.uid,
+      },
+    };
+  });
 
   return {
     paths,
-    fallback: true
-  }
+    fallback: true,
+  };
 };
 
 export const getStaticProps: GetStaticProps = async ({
   params,
   preview = false,
-  previewData
+  previewData,
 }) => {
   const prismic = getPrismicClient();
   const { slug } = params;
@@ -206,18 +206,18 @@ export const getStaticProps: GetStaticProps = async ({
     {
       pageSize: 1,
       after: response.id,
-      orderings: '[document.first_publication_date]'
+      orderings: '[document.first_publication_date]',
     }
-  )
+  );
 
   const nextPost = await prismic.query(
     [Prismic.Predicates.at('document.type', 'posts')],
     {
       pageSize: 1,
       after: response.id,
-      orderings: '[document.last_publication_date desc]'
+      orderings: '[document.last_publication_date desc]',
     }
-  )
+  );
 
   const post = {
     uid: response.uid,
@@ -233,20 +233,20 @@ export const getStaticProps: GetStaticProps = async ({
       content: response.data.content.map(content => {
         return {
           heading: content.heading,
-          body: [...content.body]
-        }
-      })
-    }
-  }
+          body: [...content.body],
+        };
+      }),
+    },
+  };
 
   return {
     props: {
       post,
       navigation: {
         previousPost: previousPost?.results,
-        nextPost: nextPost?.results
+        nextPost: nextPost?.results,
       },
-      preview
-    }
-  }
+      preview,
+    },
+  };
 };
